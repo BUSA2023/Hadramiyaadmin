@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal — Markazul Ulama Dars</title>
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BUSA2023/Hadraiya/refs/heads/main/file_000000007cc08211be292d575072aa54.png">
+
+    <!-- Google Fonts: Cormorant Garamond & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Matching Institutional Palette (Warm Alabaster, Deep Obsidian Ink, Antique Bronze) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+                        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        alabaster: '#FAF8F5',
+                        limestone: '#F1ECE4',
+                        sand: '#E4DDD3',
+                        ink: '#151412',
+                        charcoal: '#24221E',
+                        muted: '#6B655D',
+                        bronze: '#946B43',
+                        'bronze-light': '#C49F78',
+                        'bronze-dark': '#72502E',
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        .tab-btn.active {
+            background-color: #151412;
+            color: #FAF8F5;
+            border-color: #151412;
+        }
+    </style>
+</head>
+<body class="bg-alabaster text-ink font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- =========================================================
+         ADMIN LOGIN GATE (DEFAULT PASSCODE: 1433)
+         ========================================================= -->
+    <div id="admin-login-screen" class="flex-1 flex items-center justify-center p-5 bg-limestone/60">
+        <div class="w-full max-w-md rounded-xl border border-sand bg-alabaster p-8 shadow-xl space-y-6">
+            <div class="text-center space-y-1.5">
+                <img src="https://raw.githubusercontent.com/BUSA2023/Hadraiya/refs/heads/main/file_000000007cc08211be292d575072aa54.png" alt="Markazul Ulama Dars Logo" class="w-14 h-14 mx-auto mb-2 object-contain rounded-md border border-sand bg-limestone/40 p-1" onerror="this.style.display='none'" />
+                <span class="text-[10px] uppercase tracking-[0.26em] text-bronze font-semibold block">Institutional CMS</span>
+                <h1 class="font-serif text-3xl font-medium text-ink">Markazul Ulama Dars</h1>
+                <p class="text-xs text-muted font-light">Sign in to manage website content, photos, Usthad profiles, and inquiries.</p>
+            </div>
+
+            <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+                <div>
+                    <label for="admin-passcode-input" class="block text-[10px] uppercase tracking-[0.18em] text-muted mb-1.5">Admin Passcode</label>
+                    <input type="password" id="admin-passcode-input" required placeholder="Enter passcode (default: 1433)" class="w-full px-4 py-3 rounded-md border border-sand bg-limestone/40 text-sm text-ink focus:outline-none focus:border-bronze tracking-widest" />
+                    <p id="login-error" class="hidden text-xs text-red-700 mt-1.5">Incorrect passcode. Please try again.</p>
+                </div>
+                <button type="submit" class="w-full py-3 rounded-md bg-ink text-alabaster text-xs uppercase tracking-[0.2em] hover:bg-bronze transition-colors cursor-pointer">
+                    Unlock Admin Portal
+                </button>
+            </form>
+
+            <div class="pt-4 border-t border-sand text-center">
+                <a id="login-public-link" href="index.html" class="text-[11px] uppercase tracking-[0.16em] text-muted hover:text-bronze transition-colors">
+                    &larr; Open Public Website
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         ADMIN DASHBOARD WORKSPACE
+         ========================================================= -->
+    <div id="admin-dashboard" class="hidden flex-1 flex flex-col">
+        <!-- Top Bar -->
+        <header class="sticky top-0 z-40 bg-ink text-alabaster border-b border-alabaster/10 px-4 sm:px-6 py-3.5">
+            <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div>
+                        <span class="text-[10px] uppercase tracking-[0.22em] text-bronze-light block leading-none">Markazul Ulama Dars &middot; CMS</span>
+                        <h2 class="font-serif text-xl font-medium leading-tight">Admin Editing Portal</h2>
+                    </div>
+                    <span id="sync-status-badge" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-alabaster/10 border border-alabaster/15 text-[10px] uppercase tracking-[0.14em] text-bronze-light">
+                        <span class="w-1.5 h-1.5 rounded-full bg-bronze-light"></span>
+                        <span>Connecting...</span>
+                    </span>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <a id="header-public-link" href="index.html" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-md border border-alabaster/20 text-[11px] uppercase tracking-[0.14em] text-alabaster/90 hover:border-bronze-light hover:text-bronze-light transition-colors">
+                        View Public Site
+                    </a>
+                    <button type="button" onclick="saveAdminChanges()" class="px-4 py-2 rounded-md bg-bronze text-alabaster text-[11px] uppercase tracking-[0.16em] font-medium hover:bg-bronze-dark transition-colors cursor-pointer">
+                        Save &amp; Publish
+                    </button>
+                    <button type="button" onclick="logoutAdmin()" class="px-3 py-2 rounded-md border border-alabaster/15 text-[11px] uppercase tracking-[0.14em] text-alabaster/70 hover:text-alabaster cursor-pointer">
+                        Lock
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Layout: Sidebar + Editor Panels -->
+        <div class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Sidebar Tabs -->
+            <aside class="lg:col-span-3 space-y-1.5">
+                <button type="button" data-tab="general" onclick="switchAdminTab('general')" class="tab-btn active w-full text-left px-4 py-2.5 rounded-md border border-sand text-xs uppercase tracking-[0.14em] transition-colors cursor-pointer">1. General &amp; Home</button>
+                <button type="button" data-tab="updates" onclick="switchAdminTab('updates')" class="tab-btn w-full text-left px-4 py-2.5 rounded-md border border-sand bg-alabaster text-xs uppercase tracking-[0.14em] hover:border-bronze transition-colors cursor-pointer">2. Updates Slider</button>
+                <button type="button" data-tab="about" onclick="switchAdminTab('about')" class="tab-btn w-full text-left px-4 py-2.5 rounded-md border border-sand bg-alabaster text-xs uppercase tracking-[0.14em] hover:border-bronze transition-colors cursor-pointer">3. About, Vision &amp; Mission</button>
+                <button type="button" data-tab="usthad" onclick="switchAdminTab('usthad')" class="tab-btn w-full text-left px-4 py-2.5 rounded-md border border-sand bg-alabaster text-xs uppercase tracking-[0.14em] hover:border-bronze transition-colors cursor-pointer">4. Usthad &amp; Photos</button>
+                <button type="button" data-tab="programs" onclick="switchAdminTab('programs')" class="tab-btn w-full text-left px-4 py-2.5 rounded-md border border-sand bg-alabaster text-xs uppercase tracking-[0.14em] hover:border-bronze transition-colors cursor-pointer">5. Programs</button>
+                <button type="button" data-tab="events" onclick="switchAdminTab('events')" class="tab-btn w-full text-left px-4 py-2.5 rounded-md border border-sand bg-alabaster text-xs uppercase tracking-[0.14em] hover:border-bronze transition-colors cursor-pointer">6. Events Ledger</button>
+                <button type="button" data-tab="gallery" onclick="switchAdminTab('gallery')" class="tab-btn w-full text-left px-4 py-2.5 rounded-md border border-sand bg-alabaster text-xs uppercase tracking-[0.14em] hover:border-bronze transition-colors cursor-pointer">7. Gallery Photos</button>
+                <button type="button" data-tab="contact" onclick="switchAdminTab('contact')" class="tab-btn w-full text-left px-4 py-2.5 rounded-md border border-sand bg-alabaster text-xs uppercase tracking-[0.14em] hover:border-bronze transition-colors cursor-pointer">8. Contact &amp; Socials</button>
+                <button type="button" data-tab="inquiries" onclick="switchAdminTab('inquiries')" class="tab-btn w-full text-left px-4 py-2.5 rounded-md border border-sand bg-alabaster text-xs uppercase tracking-[0.14em] hover:border-bronze transition-colors cursor-pointer flex items-center justify-between">
+                    <span>9. Inquiries Inbox</span>
+                    <span id="inquiries-count-badge" class="px-1.5 py-0.5 rounded bg-bronze text-alabaster text-[10px]">0</span>
+                </button>
+                <div class="pt-4 mt-4 border-t border-sand space-y-2">
+                    <button type="button" onclick="exportBackupJson()" class="w-full px-4 py-2.5 rounded-md border border-bronze/50 bg-limestone/60 text-ink text-[11px] uppercase tracking-[0.14em] hover:bg-bronze hover:text-alabaster transition-colors cursor-pointer">
+                        Download Backup (.json)
+                    </button>
+                    <label class="block w-full text-center px-4 py-2.5 rounded-md border border-sand bg-alabaster text-ink text-[11px] uppercase tracking-[0.14em] hover:border-bronze transition-colors cursor-pointer">
+                        Restore Backup
+                        <input type="file" accept="application/json,.json" onchange="importBackupJson(event)" class="hidden" />
+                    </label>
+                    <button type="button" id="reset-btn" onclick="handleResetClick()" class="w-full px-4 py-2.5 rounded-md border border-red-300 text-red-800 text-[11px] uppercase tracking-[0.14em] hover:bg-red-50 transition-colors cursor-pointer">
+                        Reset Site to Defaults
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Editor Content Area -->
+            <main class="lg:col-span-9 rounded-lg border border-sand bg-alabaster p-5 sm:p-7">
+
+                <!-- TAB 1: GENERAL & HOME -->
+                <div id="tab-general" class="admin-panel space-y-5">
+                    <h3 class="font-serif text-2xl font-medium text-ink border-b border-sand pb-2">General Branding &amp; Home Hero</h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Institution Name</label>
+                            <input id="ed-brandName" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Header Subtitle</label>
+                            <input id="ed-brandSub" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Hero Eyebrow</label>
+                            <input id="ed-heroEyebrow" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Hero Main Title</label>
+                            <input id="ed-heroTitle" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Hero Tagline</label>
+                            <input id="ed-heroTagline" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Home Overview Paragraph</label>
+                            <textarea id="ed-heroDesc" rows="4" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Primary Button Text</label>
+                            <input id="ed-heroBtnPrimary" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Secondary Button Text</label>
+                            <input id="ed-heroBtnSecondary" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                    </div>
+
+                    <!-- Logo & Hero Feature Photo Uploads -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-sand">
+                        <div class="p-4 rounded-md border border-sand bg-limestone/30 space-y-2">
+                            <span class="text-[10px] uppercase tracking-[0.16em] text-bronze font-semibold block">Institution Logo</span>
+                            <div id="preview-logoUrl" class="h-20 rounded border border-sand bg-alabaster flex items-center justify-center overflow-hidden"></div>
+                            <div class="flex flex-wrap gap-2">
+                                <label class="px-3 py-1.5 rounded bg-ink text-alabaster text-[10px] uppercase tracking-[0.14em] cursor-pointer hover:bg-bronze transition-colors">
+                                    Upload Logo
+                                    <input type="file" accept="image/*" onchange="handleSingleImageUpload(event, 'logoUrl')" class="hidden" />
+                                </label>
+                                <button type="button" onclick="clearSingleImage('logoUrl')" class="px-3 py-1.5 rounded border border-sand text-[10px] uppercase tracking-[0.14em] text-muted hover:text-ink cursor-pointer">Clear</button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-md border border-sand bg-limestone/30 space-y-2">
+                            <span class="text-[10px] uppercase tracking-[0.16em] text-bronze font-semibold block">Home Feature Photo (Optional)</span>
+                            <div id="preview-heroImageUrl" class="h-20 rounded border border-sand bg-alabaster flex items-center justify-center overflow-hidden"></div>
+                            <div class="flex flex-wrap gap-2">
+                                <label class="px-3 py-1.5 rounded bg-ink text-alabaster text-[10px] uppercase tracking-[0.14em] cursor-pointer hover:bg-bronze transition-colors">
+                                    Upload Photo
+                                    <input type="file" accept="image/*" onchange="handleSingleImageUpload(event, 'heroImageUrl')" class="hidden" />
+                                </label>
+                                <button type="button" onclick="clearSingleImage('heroImageUrl')" class="px-3 py-1.5 rounded border border-sand text-[10px] uppercase tracking-[0.14em] text-muted hover:text-ink cursor-pointer">Use Emblem</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer & Security Settings -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-sand">
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Footer Organization Name</label>
+                            <input id="ed-footerOrg" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Footer Tagline</label>
+                            <input id="ed-footerTagline" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Admin Passcode</label>
+                            <input id="ed-adminPasscode" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div class="sm:col-span-3">
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Public Website URL (for "View Public Site" button)</label>
+                            <input id="ed-publicSiteUrl" type="text" placeholder="index.html or https://yourdomain.com" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: UPDATES SLIDER -->
+                <div id="tab-updates" class="admin-panel hidden space-y-5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-sand pb-2">
+                        <h3 class="font-serif text-2xl font-medium text-ink">Auto-Scrolling Left Updates Slider</h3>
+                        <button type="button" onclick="addAdminUpdate()" class="px-3.5 py-1.5 rounded bg-ink text-alabaster text-[11px] uppercase tracking-[0.14em] hover:bg-bronze cursor-pointer">+ Add Update</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Slider Heading</label>
+                            <input id="ed-updatesHeading" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Pause Time per Update (seconds)</label>
+                            <input id="ed-marqueeSpeed" type="number" min="2" max="15" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                    </div>
+                    <div id="admin-updates-list" class="space-y-4"></div>
+                </div>
+
+                <!-- TAB 3: ABOUT, VISION & MISSION -->
+                <div id="tab-about" class="admin-panel hidden space-y-5">
+                    <h3 class="font-serif text-2xl font-medium text-ink border-b border-sand pb-2">About, Vision, Mission &amp; Pillars</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">About Heading</label>
+                            <input id="ed-aboutHeading" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">About Paragraph 1</label>
+                            <textarea id="ed-aboutP1" rows="3" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">About Paragraph 2</label>
+                            <textarea id="ed-aboutP2" rows="3" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm"></textarea>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Vision Title</label>
+                                <input id="ed-visionTitle" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm mb-2" />
+                                <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Vision Statement</label>
+                                <textarea id="ed-visionText" rows="3" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Mission Title</label>
+                                <input id="ed-missionTitle" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm mb-2" />
+                                <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Mission Statement</label>
+                                <textarea id="ed-missionText" rows="3" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-sand space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs uppercase tracking-[0.16em] text-bronze font-semibold">Core Pillars</span>
+                            <button type="button" onclick="addAdminPillar()" class="px-3 py-1 rounded bg-ink text-alabaster text-[10px] uppercase tracking-[0.14em] hover:bg-bronze cursor-pointer">+ Add Pillar</button>
+                        </div>
+                        <div id="admin-pillars-list" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: USTHAD & PHOTOS -->
+                <div id="tab-usthad" class="admin-panel hidden space-y-5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-sand pb-2">
+                        <div>
+                            <h3 class="font-serif text-2xl font-medium text-ink">Usthad Profiles &amp; Photos</h3>
+                            <p class="text-xs text-muted">The first Usthad profile is automatically featured on the Home page.</p>
+                        </div>
+                        <button type="button" onclick="addAdminUsthad()" class="px-3.5 py-1.5 rounded bg-ink text-alabaster text-[11px] uppercase tracking-[0.14em] hover:bg-bronze cursor-pointer">+ Add Usthad</button>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Section Heading</label>
+                        <input id="ed-usthadHeading" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                    </div>
+                    <div id="admin-usthads-list" class="space-y-4"></div>
+                </div>
+
+                <!-- TAB 5: PROGRAMS -->
+                <div id="tab-programs" class="admin-panel hidden space-y-5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-sand pb-2">
+                        <h3 class="font-serif text-2xl font-medium text-ink">Programs &amp; Activities</h3>
+                        <button type="button" onclick="addAdminProgram()" class="px-3.5 py-1.5 rounded bg-ink text-alabaster text-[11px] uppercase tracking-[0.14em] hover:bg-bronze cursor-pointer">+ Add Program</button>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Programs Heading</label>
+                        <input id="ed-programsHeading" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                    </div>
+                    <div id="admin-programs-list" class="space-y-4"></div>
+                </div>
+
+                <!-- TAB 6: EVENTS -->
+                <div id="tab-events" class="admin-panel hidden space-y-5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-sand pb-2">
+                        <h3 class="font-serif text-2xl font-medium text-ink">News &amp; Upcoming Events</h3>
+                        <button type="button" onclick="addAdminEvent()" class="px-3.5 py-1.5 rounded bg-ink text-alabaster text-[11px] uppercase tracking-[0.14em] hover:bg-bronze cursor-pointer">+ Add Event</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Events Heading</label>
+                            <input id="ed-eventsHeading" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Empty State Message</label>
+                            <input id="ed-eventsEmptyText" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                    </div>
+                    <div id="admin-events-list" class="space-y-4"></div>
+                </div>
+
+                <!-- TAB 7: GALLERY -->
+                <div id="tab-gallery" class="admin-panel hidden space-y-5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-sand pb-2">
+                        <h3 class="font-serif text-2xl font-medium text-ink">Gallery Photos</h3>
+                        <button type="button" onclick="addAdminGalleryItem()" class="px-3.5 py-1.5 rounded bg-ink text-alabaster text-[11px] uppercase tracking-[0.14em] hover:bg-bronze cursor-pointer">+ Add Photo Frame</button>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Gallery Heading</label>
+                        <input id="ed-galleryHeading" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                    </div>
+                    <div id="admin-gallery-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+                </div>
+
+                <!-- TAB 8: CONTACT & SOCIALS -->
+                <div id="tab-contact" class="admin-panel hidden space-y-5">
+                    <h3 class="font-serif text-2xl font-medium text-ink border-b border-sand pb-2">Contact Information &amp; Social Links</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Contact Heading</label>
+                            <input id="ed-contactHeading" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Full Address</label>
+                            <input id="ed-contactAddress" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Phone Number (Also used for WhatsApp)</label>
+                            <input id="ed-contactPhone" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Email Address</label>
+                            <input id="ed-contactEmail" type="email" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Instagram Handle Label</label>
+                            <input id="ed-igLabel" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Instagram Profile URL</label>
+                            <input id="ed-igUrl" type="url" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">YouTube Channel Name</label>
+                            <input id="ed-ytLabel" type="text" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.16em] text-muted mb-1">YouTube Channel URL</label>
+                            <input id="ed-ytUrl" type="url" class="w-full px-3 py-2 rounded border border-sand bg-limestone/30 text-sm" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 9: INQUIRIES INBOX -->
+                <div id="tab-inquiries" class="admin-panel hidden space-y-5">
+                    <h3 class="font-serif text-2xl font-medium text-ink border-b border-sand pb-2">Visitor Queries &amp; Inquiries</h3>
+                    <div id="admin-inquiries-list" class="space-y-3"></div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Custom Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 translate-y-20 opacity-0 pointer-events-none transition-all duration-300 bg-ink text-alabaster border border-bronze/40 px-4 py-3 rounded-md shadow-xl text-xs tracking-wide max-w-xs"></div>
+
+    <!-- =========================================================
+         ADMIN PORTAL LOGIC
+         ========================================================= -->
+    <script>
+        const LOCAL_STORAGE_KEY = 'markazul_ulama_site_data_v1';
+        const LOCAL_INQUIRIES_KEY = 'markazul_ulama_inquiries_v1';
+
+        function getDefaultSiteData() {
+            return {
+                adminPasscode: '1433',
+                publicSiteUrl: 'index.html',
+                brandName: 'Markazul Ulama Dars',
+                brandSub: 'Chenakkalangadi · Malappuram',
+                logoUrl: 'https://raw.githubusercontent.com/BUSA2023/Hadraiya/refs/heads/main/file_000000007cc08211be292d575072aa54.png',
+                heroImageUrl: '',
+                heroEyebrow: 'Chenakkalangadi · Malappuram · Kerala',
+                heroTitle: 'Markazul Ulama Dars',
+                heroTagline: 'Guidance · Knowledge · Righteous Generation',
+                heroDesc: "Rooted in the timeless Dars tradition of Kerala, Markazul Ulama Dars in Chenakkalangadi, Malappuram is an Islamic scholarly institution devoted to classical jurisprudence, Qur'anic exegesis, prophetic sciences, and spiritual refinement. Under the close mentorship of dedicated scholars, students are nurtured to unite deep sacred knowledge with humility, moral integrity, and compassionate service to society.",
+                heroBtnPrimary: 'Explore Programs',
+                heroBtnSecondary: 'Get in Touch',
+                footerOrg: 'Markazul Ulama Dars, Chenakkalangadi',
+                footerTagline: 'Knowledge · Character · Service',
+                updatesHeading: 'New Updates & Highlights',
+                marqueeSpeed: 4,
+                updates: [
+                    { tag: 'Admission', date: 'Open Soon', title: 'New Academic Year Dars Admissions', imageUrl: '' },
+                    { tag: 'Majlis', date: 'Monthly', title: 'Weekly Spiritual Gathering & Discourse', imageUrl: '' },
+                    { tag: 'Students', date: 'Campus Life', title: 'Annual Literary & Islamic Quiz Assembly', imageUrl: '' },
+                    { tag: 'Community', date: 'Outreach', title: 'Neighborhood Welfare & Guidance Initiative', imageUrl: '' }
+                ],
+                aboutHeading: 'Preserving Sacred Scholarship in Malappuram',
+                aboutP1: 'Markazul Ulama Dars stands as a quiet sanctuary of traditional Islamic learning in Chenakkalangadi, Malappuram. Following the centuries-old Kerala Dars heritage, we guide residential students through foundational and advanced classical texts in Fiqh, Tafsir, Hadith, and Arabic sciences.',
+                aboutP2: 'Beyond classroom instruction, our institution fosters moral discipline, brotherhood, articulate expression, and active service to the wider community.',
+                visionTitle: 'Our Vision',
+                visionText: 'To nurture a righteous, knowledgeable, and service-minded generation who carry sacred wisdom with humility and illuminate society through character and compassion.',
+                missionTitle: 'Our Mission',
+                missionText: 'To provide authentic classical Dars education paired with spiritual mentorship, literary refinement, and meaningful community outreach in Malappuram and beyond.',
+                pillars: [
+                    { num: '01', title: 'Dars & Learning', desc: "Systematic classical Islamic studies in jurisprudence, theology, Arabic, and Qur'anic sciences." },
+                    { num: '02', title: 'Islamic Programs', desc: 'Regular spiritual Majlis, religious discourses, and commemorative scholarly assemblies.' },
+                    { num: '03', title: 'Student Activities', desc: 'Islamic quizzes, Arabic & Malayalam literary forums, and arts development.' },
+                    { num: '04', title: 'Community Service', desc: 'Social guidance, family counseling, and compassionate outreach initiatives.' }
+                ],
+                usthadHeading: 'About Our Usthad',
+                usthads: [
+                    {
+                        name: 'Principal Mudarris',
+                        role: 'Chief Usthad & Spiritual Mentor',
+                        bio: 'Dedicated to teaching classical Islamic sciences and guiding students in spiritual discipline, scholarly precision, and compassionate leadership within the community.',
+                        quote: 'True scholarship is measured not merely by what is memorized, but by the humility and service it inspires.',
+                        photoUrl: ''
+                    }
+                ],
+                programsHeading: 'Programs & Activities',
+                programs: [
+                    { category: 'Academic Core', title: 'Dars & Islamic Learning', desc: 'Comprehensive residential Dars curriculum covering classical Arabic grammar, Fiqh, Usul, Tafsir, Hadith, and spiritual purification under daily scholarly supervision.' },
+                    { category: 'Spiritual Outreach', title: 'Islamic Programs', desc: 'Scheduled Majlis gatherings, religious discourses, and seasonal spiritual programs open to the local community for remembrance and moral renewal.' },
+                    { category: 'Co-Curricular', title: 'Student Activities', desc: 'Weekly student assemblies featuring Islamic quizzes, eloquence training, manuscript reading, and arts and literary competitions.' },
+                    { category: 'Public Benefit', title: 'Community Service', desc: 'Charitable assistance, youth guidance, and neighborhood welfare programs rooted in the prophetic ethos of serving humanity.' }
+                ],
+                eventsHeading: 'News & Upcoming Events',
+                eventsEmptyText: 'No upcoming events are scheduled at the moment. Please check back soon for dates and timings of our next Majlis and scholarly programs.',
+                events: [],
+                galleryHeading: 'Gallery',
+                gallery: [
+                    { plate: 'Plate I', caption: 'Dars Study Hall & Library', status: 'Soon', imageUrl: '' },
+                    { plate: 'Plate II', caption: 'Monthly Majlis Gathering', status: 'Soon', imageUrl: '' },
+                    { plate: 'Plate III', caption: 'Student Literary & Quiz Forum', status: 'Soon', imageUrl: '' },
+                    { plate: 'Plate IV', caption: 'Community Service Initiative', status: 'Soon', imageUrl: '' }
+                ],
+                contactHeading: 'Contact Us',
+                contact: {
+                    address: 'Markazul Ulama Dars, Chenakkalangadi, Malappuram, Kerala, India',
+                    phone: '+91 97456 75211',
+                    email: 'thamereenutwalaba786@gmail.com',
+                    igLabel: '@markazul_ulama_chelari',
+                    igUrl: 'https://www.instagram.com/markazul_ulama_chelari?hvrq=dTFidThidzVpNXlz',
+                    ytLabel: 'Markazul Ulama Dars',
+                    ytUrl: 'https://youtube.com/@wadeenajathonline1433?si=OziiqWaENmsnG6fS'
+                }
+            };
+        }
+
+        let adminDraft = getDefaultSiteData();
+        let inquiriesList = [];
+        let isUnlocked = false;
+        let resetConfirmArmed = false;
+
+        try {
+            const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (cached) adminDraft = Object.assign(getDefaultSiteData(), JSON.parse(cached));
+            const cachedInq = localStorage.getItem(LOCAL_INQUIRIES_KEY);
+            if (cachedInq) inquiriesList = JSON.parse(cachedInq);
+        } catch (e) { /* ignore */ }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        let toastTimer = null;
+        window.showToast = function (msg) {
+            const el = document.getElementById('toast');
+            if (!el) return;
+            el.textContent = msg;
+            el.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                el.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            }, 3200);
+        };
+
+        window.updateSyncBadge = function (label) {
+            const badge = document.getElementById('sync-status-badge');
+            if (!badge) return;
+            badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-bronze-light"></span><span>${escapeHtml(label)}</span>`;
+        };
+
+        function handleAdminLogin(event) {
+            event.preventDefault();
+            const entered = document.getElementById('admin-passcode-input').value.trim();
+            const expected = adminDraft.adminPasscode || '1433';
+            if (entered === expected) {
+                isUnlocked = true;
+                document.getElementById('login-error').classList.add('hidden');
+                document.getElementById('admin-login-screen').classList.add('hidden');
+                document.getElementById('admin-dashboard').classList.remove('hidden');
+                populateAdminFields();
+                showToast('Welcome to the Admin Portal.');
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        }
+
+        function logoutAdmin() {
+            isUnlocked = false;
+            document.getElementById('admin-passcode-input').value = '';
+            document.getElementById('admin-dashboard').classList.add('hidden');
+            document.getElementById('admin-login-screen').classList.remove('hidden');
+        }
+
+        function switchAdminTab(tabId) {
+            document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
+            const panel = document.getElementById('tab-' + tabId);
+            if (panel) panel.classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabId);
+            });
+        }
+
+        function compressImageFile(file, maxWidth, quality, callback) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    const scale = Math.min(1, maxWidth / img.width);
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    try {
+                        callback(canvas.toDataURL('image/jpeg', quality));
+                    } catch (err) {
+                        callback(e.target.result);
+                    }
+                };
+                img.onerror = function () { callback(e.target.result); };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function populateAdminFields() {
+            document.getElementById('ed-brandName').value = adminDraft.brandName || '';
+            document.getElementById('ed-brandSub').value = adminDraft.brandSub || '';
+            document.getElementById('ed-heroEyebrow').value = adminDraft.heroEyebrow || '';
+            document.getElementById('ed-heroTitle').value = adminDraft.heroTitle || '';
+            document.getElementById('ed-heroTagline').value = adminDraft.heroTagline || '';
+            document.getElementById('ed-heroDesc').value = adminDraft.heroDesc || '';
+            document.getElementById('ed-heroBtnPrimary').value = adminDraft.heroBtnPrimary || '';
+            document.getElementById('ed-heroBtnSecondary').value = adminDraft.heroBtnSecondary || '';
+            document.getElementById('ed-footerOrg').value = adminDraft.footerOrg || '';
+            document.getElementById('ed-footerTagline').value = adminDraft.footerTagline || '';
+            document.getElementById('ed-adminPasscode').value = adminDraft.adminPasscode || '1433';
+            document.getElementById('ed-publicSiteUrl').value = adminDraft.publicSiteUrl || 'index.html';
+
+            document.getElementById('header-public-link').href = adminDraft.publicSiteUrl || 'index.html';
+            document.getElementById('login-public-link').href = adminDraft.publicSiteUrl || 'index.html';
+
+            document.getElementById('ed-updatesHeading').value = adminDraft.updatesHeading || '';
+            const savedPause = Number(adminDraft.marqueeSpeed);
+            document.getElementById('ed-marqueeSpeed').value = (savedPause >= 2 && savedPause <= 15) ? savedPause : 4;
+
+            document.getElementById('ed-aboutHeading').value = adminDraft.aboutHeading || '';
+            document.getElementById('ed-aboutP1').value = adminDraft.aboutP1 || '';
+            document.getElementById('ed-aboutP2').value = adminDraft.aboutP2 || '';
+            document.getElementById('ed-visionTitle').value = adminDraft.visionTitle || '';
+            document.getElementById('ed-visionText').value = adminDraft.visionText || '';
+            document.getElementById('ed-missionTitle').value = adminDraft.missionTitle || '';
+            document.getElementById('ed-missionText').value = adminDraft.missionText || '';
+
+            document.getElementById('ed-usthadHeading').value = adminDraft.usthadHeading || '';
+            document.getElementById('ed-programsHeading').value = adminDraft.programsHeading || '';
+            document.getElementById('ed-eventsHeading').value = adminDraft.eventsHeading || '';
+            document.getElementById('ed-eventsEmptyText').value = adminDraft.eventsEmptyText || '';
+            document.getElementById('ed-galleryHeading').value = adminDraft.galleryHeading || '';
+
+            document.getElementById('ed-contactHeading').value = adminDraft.contactHeading || '';
+            document.getElementById('ed-contactAddress').value = (adminDraft.contact && adminDraft.contact.address) || '';
+            document.getElementById('ed-contactPhone').value = (adminDraft.contact && adminDraft.contact.phone) || '';
+            document.getElementById('ed-contactEmail').value = (adminDraft.contact && adminDraft.contact.email) || '';
+            document.getElementById('ed-igLabel').value = (adminDraft.contact && adminDraft.contact.igLabel) || '';
+            document.getElementById('ed-igUrl').value = (adminDraft.contact && adminDraft.contact.igUrl) || '';
+            document.getElementById('ed-ytLabel').value = (adminDraft.contact && adminDraft.contact.ytLabel) || '';
+            document.getElementById('ed-ytUrl').value = (adminDraft.contact && adminDraft.contact.ytUrl) || '';
+
+            renderSingleImagePreviews();
+            renderAdminUpdatesList();
+            renderAdminPillarsList();
+            renderAdminUsthadsList();
+            renderAdminProgramsList();
+            renderAdminEventsList();
+            renderAdminGalleryList();
+            renderAdminInquiriesList();
+        }
+
+        function renderSingleImagePreviews() {
+            const logoPrev = document.getElementById('preview-logoUrl');
+            logoPrev.innerHTML = adminDraft.logoUrl
+                ? `<img src="${escapeHtml(adminDraft.logoUrl)}" class="h-full object-contain" />`
+                : `<span class="text-xs text-muted">No logo uploaded</span>`;
+
+            const heroPrev = document.getElementById('preview-heroImageUrl');
+            heroPrev.innerHTML = adminDraft.heroImageUrl
+                ? `<img src="${escapeHtml(adminDraft.heroImageUrl)}" class="h-full w-full object-cover" />`
+                : `<span class="text-xs text-muted">Using animated emblem</span>`;
+        }
+
+        function handleSingleImageUpload(event, field) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            compressImageFile(file, 900, 0.72, (dataUrl) => {
+                adminDraft[field] = dataUrl;
+                renderSingleImagePreviews();
+                showToast('Image optimized. Click Save & Publish.');
+            });
+        }
+
+        function clearSingleImage(field) {
+            adminDraft[field] = '';
+            renderSingleImagePreviews();
+        }
+
+        // --- Updates Slider ---
+        function renderAdminUpdatesList() {
+            const wrap = document.getElementById('admin-updates-list');
+            wrap.innerHTML = (adminDraft.updates || []).map((u, i) => `
+                <div class="p-4 rounded-md border border-sand bg-limestone/30 grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                    <div class="sm:col-span-3 flex flex-col items-center gap-2">
+                        <div class="w-full h-20 rounded border border-sand bg-alabaster overflow-hidden flex items-center justify-center">
+                            ${u.imageUrl ? `<img src="${escapeHtml(u.imageUrl)}" class="w-full h-full object-cover" />` : `<span class="text-[10px] text-muted">No Image</span>`}
+                        </div>
+                        <label class="px-2.5 py-1 rounded bg-ink text-alabaster text-[10px] uppercase tracking-[0.12em] cursor-pointer hover:bg-bronze">
+                            Upload Photo
+                            <input type="file" accept="image/*" onchange="handleUpdateImageUpload(event, ${i})" class="hidden" />
+                        </label>
+                    </div>
+                    <div class="sm:col-span-9 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <input type="text" value="${escapeHtml(u.tag)}" oninput="adminDraft.updates[${i}].tag = this.value" placeholder="Tag (e.g. Majlis)" class="px-3 py-2 rounded border border-sand bg-alabaster text-xs" />
+                        <input type="text" value="${escapeHtml(u.date)}" oninput="adminDraft.updates[${i}].date = this.value" placeholder="Date / Label" class="px-3 py-2 rounded border border-sand bg-alabaster text-xs" />
+                        <input type="text" value="${escapeHtml(u.title)}" oninput="adminDraft.updates[${i}].title = this.value" placeholder="Update Headline" class="sm:col-span-2 px-3 py-2 rounded border border-sand bg-alabaster text-xs" />
+                        <div class="sm:col-span-2 flex justify-end">
+                            <button type="button" onclick="adminDraft.updates.splice(${i}, 1); renderAdminUpdatesList();" class="text-[10px] uppercase tracking-[0.14em] text-red-700 hover:underline cursor-pointer">Remove</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addAdminUpdate() {
+            adminDraft.updates.push({ tag: 'Update', date: 'New', title: 'New Highlight Title', imageUrl: '' });
+            renderAdminUpdatesList();
+        }
+
+        function handleUpdateImageUpload(event, index) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            compressImageFile(file, 720, 0.72, (dataUrl) => {
+                adminDraft.updates[index].imageUrl = dataUrl;
+                renderAdminUpdatesList();
+                showToast('Update photo uploaded. Click Save & Publish.');
+            });
+        }
+
+        // --- Pillars ---
+        function renderAdminPillarsList() {
+            const wrap = document.getElementById('admin-pillars-list');
+            wrap.innerHTML = (adminDraft.pillars || []).map((p, i) => `
+                <div class="p-3.5 rounded-md border border-sand bg-limestone/30 grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                    <input type="text" value="${escapeHtml(p.num)}" oninput="adminDraft.pillars[${i}].num = this.value" class="sm:col-span-2 px-3 py-2 rounded border border-sand bg-alabaster text-xs" placeholder="01" />
+                    <input type="text" value="${escapeHtml(p.title)}" oninput="adminDraft.pillars[${i}].title = this.value" class="sm:col-span-4 px-3 py-2 rounded border border-sand bg-alabaster text-xs" placeholder="Title" />
+                    <input type="text" value="${escapeHtml(p.desc)}" oninput="adminDraft.pillars[${i}].desc = this.value" class="sm:col-span-5 px-3 py-2 rounded border border-sand bg-alabaster text-xs" placeholder="Short description" />
+                    <button type="button" onclick="adminDraft.pillars.splice(${i}, 1); renderAdminPillarsList();" class="sm:col-span-1 text-red-700 text-xs cursor-pointer">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        function addAdminPillar() {
+            const n = String((adminDraft.pillars.length || 0) + 1).padStart(2, '0');
+            adminDraft.pillars.push({ num: n, title: 'New Pillar', desc: 'Description here.' });
+            renderAdminPillarsList();
+        }
+
+        // --- Usthads ---
+        function renderAdminUsthadsList() {
+            const wrap = document.getElementById('admin-usthads-list');
+            wrap.innerHTML = (adminDraft.usthads || []).map((u, i) => `
+                <div class="p-4 rounded-md border border-sand bg-limestone/30 grid grid-cols-1 sm:grid-cols-12 gap-4">
+                    <div class="sm:col-span-3 flex flex-col items-center gap-2">
+                        <div class="w-28 h-32 rounded border border-sand bg-alabaster overflow-hidden flex items-center justify-center">
+                            ${u.photoUrl ? `<img src="${escapeHtml(u.photoUrl)}" class="w-full h-full object-cover" />` : `<span class="text-xs text-muted">No Photo</span>`}
+                        </div>
+                        <label class="px-3 py-1 rounded bg-ink text-alabaster text-[10px] uppercase tracking-[0.12em] cursor-pointer hover:bg-bronze">
+                            Upload Photo
+                            <input type="file" accept="image/*" onchange="handleUsthadPhotoUpload(event, ${i})" class="hidden" />
+                        </label>
+                    </div>
+                    <div class="sm:col-span-9 space-y-2.5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <input type="text" value="${escapeHtml(u.name)}" oninput="adminDraft.usthads[${i}].name = this.value" placeholder="Usthad Name" class="px-3 py-2 rounded border border-sand bg-alabaster text-xs" />
+                            <input type="text" value="${escapeHtml(u.role)}" oninput="adminDraft.usthads[${i}].role = this.value" placeholder="Role / Title" class="px-3 py-2 rounded border border-sand bg-alabaster text-xs" />
+                        </div>
+                        <textarea rows="2" oninput="adminDraft.usthads[${i}].bio = this.value" placeholder="Biography" class="w-full px-3 py-2 rounded border border-sand bg-alabaster text-xs">${escapeHtml(u.bio)}</textarea>
+                        <input type="text" value="${escapeHtml(u.quote)}" oninput="adminDraft.usthads[${i}].quote = this.value" placeholder="Scholarly Quote (optional)" class="w-full px-3 py-2 rounded border border-sand bg-alabaster text-xs" />
+                        <div class="flex justify-end">
+                            <button type="button" onclick="adminDraft.usthads.splice(${i}, 1); renderAdminUsthadsList();" class="text-[10px] uppercase tracking-[0.14em] text-red-700 hover:underline cursor-pointer">Remove Profile</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addAdminUsthad() {
+            adminDraft.usthads.push({ name: 'New Usthad', role: 'Faculty / Mudarris', bio: 'Scholarly biography.', quote: '', photoUrl: '' });
+            renderAdminUsthadsList();
+        }
+
+        function handleUsthadPhotoUpload(event, index) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            compressImageFile(file, 720, 0.75, (dataUrl) => {
+                adminDraft.usthads[index].photoUrl = dataUrl;
+                renderAdminUsthadsList();
+                showToast('Usthad photo uploaded. Click Save & Publish.');
+            });
+        }
+
+        // --- Programs ---
+        function renderAdminProgramsList() {
+            const wrap = document.getElementById('admin-programs-list');
+            wrap.innerHTML = (adminDraft.programs || []).map((pr, i) => `
+                <div class="p-4 rounded-md border border-sand bg-limestone/30 space-y-2.5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <input type="text" value="${escapeHtml(pr.category)}" oninput="adminDraft.programs[${i}].category = this.value" placeholder="Category" class="px-3 py-2 rounded border border-sand bg-alabaster text-xs" />
+                        <input type="text" value="${escapeHtml(pr.title)}" oninput="adminDraft.programs[${i}].title = this.value" placeholder="Program Title" class="px-3 py-2 rounded border border-sand bg-alabaster text-xs" />
+                    </div>
+                    <textarea rows="2" oninput="adminDraft.programs[${i}].desc = this.value" placeholder="Program description" class="w-full px-3 py-2 rounded border border-sand bg-alabaster text-xs">${escapeHtml(pr.desc)}</textarea>
+                    <div class="flex justify-end">
+                        <button type="button" onclick="adminDraft.programs.splice(${i}, 1); renderAdminProgramsList();" class="text-[10px] uppercase tracking-[0.14em] text-red-700 hover:underline cursor-pointer">Remove</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addAdminProgram() {
+            adminDraft.programs.push({ category: 'Activity', title: 'New Program', desc: 'Description here.' });
+            renderAdminProgramsList();
+        }
+
+        // --- Events ---
+        function renderAdminEventsList() {
+            const wrap = document.getElementById('admin-events-list');
+            if (!adminDraft.events || adminDraft.events.length === 0) {
+                wrap.innerHTML = `<p class="text-xs text-muted italic">No events added yet. Click "+ Add Event" to schedule one.</p>`;
+                return;
+            }
+            wrap.innerHTML = adminDraft.events.map((ev, i) => `
+                <div class="p-4 rounded-md border border-sand bg-limestone/30 space-y-2.5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <input type="text" value="${escapeHtml(ev.date)}" oninput="adminDraft.events[${i}].date = this.value" placeholder="Date (e.g. Dec 15, 2026)" class="px-3 py-2 rounded border border-sand bg-alabaster text-xs" />
+                        <input type="text" value="${escapeHtml(ev.time)}" oninput="adminDraft.events[${i}].time = this.value" placeholder="Time (e.g. 7:00 PM)" class="px-3 py-2 rounded border border-sand bg-alabaster text-xs" />
+                        <input type="text" value="${escapeHtml(ev.venue)}" oninput="adminDraft.events[${i}].venue = this.value" placeholder="Venue" class="px-3 py-2 rounded border border-sand bg-alabaster text-xs" />
+                    </div>
+                    <input type="text" value="${escapeHtml(ev.title)}" oninput="adminDraft.events[${i}].title = this.value" placeholder="Event Title" class="w-full px-3 py-2 rounded border border-sand bg-alabaster text-xs" />
+                    <input type="text" value="${escapeHtml(ev.note)}" oninput="adminDraft.events[${i}].note = this.value" placeholder="Short details / Speaker" class="w-full px-3 py-2 rounded border border-sand bg-alabaster text-xs" />
+                    <div class="flex justify-end">
+                        <button type="button" onclick="adminDraft.events.splice(${i}, 1); renderAdminEventsList();" class="text-[10px] uppercase tracking-[0.14em] text-red-700 hover:underline cursor-pointer">Delete Event</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addAdminEvent() {
+            adminDraft.events.push({ date: '', time: '', venue: 'Dars Campus', title: 'New Event', note: '' });
+            renderAdminEventsList();
+        }
+
+        // --- Gallery ---
+        function renderAdminGalleryList() {
+            const wrap = document.getElementById('admin-gallery-list');
+            wrap.innerHTML = (adminDraft.gallery || []).map((g, i) => `
+                <div class="p-4 rounded-md border border-sand bg-limestone/30 space-y-2.5">
+                    <div class="h-36 rounded border border-sand bg-alabaster overflow-hidden flex items-center justify-center">
+                        ${g.imageUrl ? `<img src="${escapeHtml(g.imageUrl)}" class="w-full h-full object-cover" />` : `<span class="text-xs text-muted">Placeholder Frame</span>`}
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <label class="px-3 py-1 rounded bg-ink text-alabaster text-[10px] uppercase tracking-[0.12em] cursor-pointer hover:bg-bronze">
+                            Upload Photo
+                            <input type="file" accept="image/*" onchange="handlePhotoUpload(event, ${i})" class="hidden" />
+                        </label>
+                        <button type="button" onclick="adminDraft.gallery[${i}].imageUrl = ''; renderAdminGalleryList();" class="px-2.5 py-1 rounded border border-sand text-[10px] uppercase text-muted cursor-pointer">Clear Photo</button>
+                        <button type="button" onclick="adminDraft.gallery.splice(${i}, 1); renderAdminGalleryList();" class="ml-auto text-[10px] uppercase text-red-700 cursor-pointer">Remove</button>
+                    </div>
+                    <input type="text" value="${escapeHtml(g.caption)}" oninput="adminDraft.gallery[${i}].caption = this.value" placeholder="Photo Caption" class="w-full px-3 py-1.5 rounded border border-sand bg-alabaster text-xs" />
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" value="${escapeHtml(g.plate)}" oninput="adminDraft.gallery[${i}].plate = this.value" placeholder="Plate Label" class="px-2.5 py-1.5 rounded border border-sand bg-alabaster text-xs" />
+                        <input type="text" value="${escapeHtml(g.status)}" oninput="adminDraft.gallery[${i}].status = this.value" placeholder="Year / Status" class="px-2.5 py-1.5 rounded border border-sand bg-alabaster text-xs" />
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addAdminGalleryItem() {
+            adminDraft.gallery.push({ plate: 'Plate ' + (adminDraft.gallery.length + 1), caption: 'New Photograph', status: String(new Date().getFullYear()), imageUrl: '' });
+            renderAdminGalleryList();
+        }
+
+        function handlePhotoUpload(event, index) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            compressImageFile(file, 900, 0.72, (dataUrl) => {
+                adminDraft.gallery[index].imageUrl = dataUrl;
+                if (adminDraft.gallery[index].status === 'Soon') {
+                    adminDraft.gallery[index].status = String(new Date().getFullYear());
+                }
+                renderAdminGalleryList();
+                showToast('Gallery photo loaded. Click Save & Publish.');
+            });
+        }
+
+        // --- Inquiries ---
+        function renderAdminInquiriesList() {
+            const badge = document.getElementById('inquiries-count-badge');
+            if (badge) badge.textContent = String(inquiriesList.length || 0);
+            const wrap = document.getElementById('admin-inquiries-list');
+            if (!wrap) return;
+            if (!inquiriesList.length) {
+                wrap.innerHTML = `<p class="text-sm text-muted italic">No visitor queries received yet.</p>`;
+                return;
+            }
+            wrap.innerHTML = inquiriesList.map((inq, i) => `
+                <div class="p-4 rounded-md border border-sand bg-limestone/30 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="font-medium text-sm text-ink">${escapeHtml(inq.name)}</span>
+                            <span class="px-2 py-0.5 rounded bg-bronze/15 text-bronze text-[10px] uppercase tracking-[0.12em]">${escapeHtml(inq.source || 'Inquiry')}</span>
+                            <span class="text-[11px] text-muted">${escapeHtml(inq.date || '')}</span>
+                        </div>
+                        <p class="text-xs text-bronze-dark">${escapeHtml(inq.contact)}</p>
+                        <p class="text-sm text-ink/85 font-light pt-1">${escapeHtml(inq.message)}</p>
+                    </div>
+                    <button type="button" onclick="removeAdminInquiry(${i})" class="text-[10px] uppercase tracking-[0.14em] text-red-700 hover:underline shrink-0 cursor-pointer">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function removeAdminInquiry(index) {
+            const target = inquiriesList[index];
+            inquiriesList.splice(index, 1);
+            try { localStorage.setItem(LOCAL_INQUIRIES_KEY, JSON.stringify(inquiriesList)); } catch (e) {}
+            renderAdminInquiriesList();
+            if (target && target.id && window.cloudBridge) {
+                window.cloudBridge.deleteInquiry(target.id);
+            }
+            showToast('Inquiry deleted.');
+        }
+
+        function exportBackupJson() {
+            try {
+                const payload = {
+                    exportedAt: new Date().toISOString(),
+                    siteData: adminDraft,
+                    inquiries: inquiriesList
+                };
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const dateStamp = new Date().toISOString().slice(0, 10);
+                a.href = url;
+                a.download = `markazul-ulama-backup-${dateStamp}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('Backup file downloaded.');
+            } catch (err) {
+                showToast('Unable to export backup.');
+            }
+        }
+
+        function importBackupJson(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    const restoredData = parsed.siteData ? parsed.siteData : parsed;
+                    if (!restoredData || typeof restoredData !== 'object') {
+                        throw new Error('Invalid backup format');
+                    }
+                    adminDraft = Object.assign(getDefaultSiteData(), restoredData);
+                    if (Array.isArray(parsed.inquiries)) {
+                        inquiriesList = parsed.inquiries;
+                        try { localStorage.setItem(LOCAL_INQUIRIES_KEY, JSON.stringify(inquiriesList)); } catch (err) {}
+                    }
+                    try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(adminDraft)); } catch (err) {}
+                    populateAdminFields();
+                    if (window.cloudBridge && window.cloudBridge.isReady()) {
+                        window.cloudBridge.saveSiteData(adminDraft);
+                    } else {
+                        showToast('Backup restored! Click Save & Publish to sync.');
+                    }
+                } catch (err) {
+                    showToast('Invalid backup file. Please choose a valid .json backup.');
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function handleResetClick() {
+            const btn = document.getElementById('reset-btn');
+            if (!resetConfirmArmed) {
+                resetConfirmArmed = true;
+                btn.textContent = 'Click Again to Confirm Reset';
+                setTimeout(() => {
+                    resetConfirmArmed = false;
+                    btn.textContent = 'Reset Site to Defaults';
+                }, 4000);
+                return;
+            }
+            resetConfirmArmed = false;
+            btn.textContent = 'Reset Site to Defaults';
+            adminDraft = getDefaultSiteData();
+            populateAdminFields();
+            try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(adminDraft)); } catch (e) {}
+            if (window.cloudBridge && window.cloudBridge.isReady()) {
+                window.cloudBridge.saveSiteData(adminDraft);
+            }
+            showToast('Site reset to defaults.');
+        }
+
+        function saveAdminChanges() {
+            try {
+                adminDraft.brandName = document.getElementById('ed-brandName').value.trim();
+                adminDraft.brandSub = document.getElementById('ed-brandSub').value.trim();
+                adminDraft.heroEyebrow = document.getElementById('ed-heroEyebrow').value.trim();
+                adminDraft.heroTitle = document.getElementById('ed-heroTitle').value.trim();
+                adminDraft.heroTagline = document.getElementById('ed-heroTagline').value.trim();
+                adminDraft.heroDesc = document.getElementById('ed-heroDesc').value.trim();
+                adminDraft.heroBtnPrimary = document.getElementById('ed-heroBtnPrimary').value.trim();
+                adminDraft.heroBtnSecondary = document.getElementById('ed-heroBtnSecondary').value.trim();
+                adminDraft.footerOrg = document.getElementById('ed-footerOrg').value.trim();
+                adminDraft.footerTagline = document.getElementById('ed-footerTagline').value.trim();
+                adminDraft.adminPasscode = document.getElementById('ed-adminPasscode').value.trim() || '1433';
+                adminDraft.publicSiteUrl = document.getElementById('ed-publicSiteUrl').value.trim() || 'index.html';
+
+                adminDraft.updatesHeading = document.getElementById('ed-updatesHeading').value.trim();
+                adminDraft.marqueeSpeed = Number(document.getElementById('ed-marqueeSpeed').value) || 4;
+
+                adminDraft.aboutHeading = document.getElementById('ed-aboutHeading').value.trim();
+                adminDraft.aboutP1 = document.getElementById('ed-aboutP1').value.trim();
+                adminDraft.aboutP2 = document.getElementById('ed-aboutP2').value.trim();
+                adminDraft.visionTitle = document.getElementById('ed-visionTitle').value.trim();
+                adminDraft.visionText = document.getElementById('ed-visionText').value.trim();
+                adminDraft.missionTitle = document.getElementById('ed-missionTitle').value.trim();
+                adminDraft.missionText = document.getElementById('ed-missionText').value.trim();
+
+                adminDraft.usthadHeading = document.getElementById('ed-usthadHeading').value.trim();
+                adminDraft.programsHeading = document.getElementById('ed-programsHeading').value.trim();
+                adminDraft.eventsHeading = document.getElementById('ed-eventsHeading').value.trim();
+                adminDraft.eventsEmptyText = document.getElementById('ed-eventsEmptyText').value.trim();
+                adminDraft.galleryHeading = document.getElementById('ed-galleryHeading').value.trim();
+
+                adminDraft.contactHeading = document.getElementById('ed-contactHeading').value.trim();
+                adminDraft.contact = {
+                    address: document.getElementById('ed-contactAddress').value.trim(),
+                    phone: document.getElementById('ed-contactPhone').value.trim(),
+                    email: document.getElementById('ed-contactEmail').value.trim(),
+                    igLabel: document.getElementById('ed-igLabel').value.trim(),
+                    igUrl: document.getElementById('ed-igUrl').value.trim(),
+                    ytLabel: document.getElementById('ed-ytLabel').value.trim(),
+                    ytUrl: document.getElementById('ed-ytUrl').value.trim()
+                };
+
+                document.getElementById('header-public-link').href = adminDraft.publicSiteUrl;
+                document.getElementById('login-public-link').href = adminDraft.publicSiteUrl;
+
+                try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(adminDraft)); } catch (e) {}
+
+                if (window.cloudBridge && window.cloudBridge.isReady()) {
+                    window.cloudBridge.saveSiteData(adminDraft);
+                } else {
+                    showToast('Saved locally! Add Firebase config to sync across devices.');
+                }
+            } catch (err) {
+                showToast('Error saving changes.');
+            }
+        }
+
+        window.applyCloudSiteData = function (remoteData) {
+            if (!remoteData || typeof remoteData !== 'object') return;
+            adminDraft = Object.assign(getDefaultSiteData(), remoteData);
+            try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(adminDraft)); } catch (e) {}
+            if (isUnlocked) populateAdminFields();
+        };
+
+        window.applyCloudInquiries = function (list) {
+            inquiriesList = list || [];
+            renderAdminInquiriesList();
+        };
+    </script>
+
+    <!-- =========================================================
+         FIREBASE REAL-TIME SYNC MODULE (ADMIN PORTAL)
+         Paste the EXACT SAME Firebase Config as index.html
+         ========================================================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 1. PASTE YOUR OWN FIREBASE CONFIG HERE (must match index.html)
+        const MY_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyD9SgLP6Mj0lmefZy0BU20sZUoNQWf0jJU",
+            authDomain: "hadra-aaa89.firebaseapp.com",
+            projectId: "hadra-aaa89",
+            storageBucket: "hadra-aaa89.firebasestorage.app",
+            messagingSenderId: "339992684084",
+            appId: "1:339992684084:web:80911e233d006dc59ccc61",
+            measurementId: "G-SGJFQHK17E"
+        };
+
+        const appId = 'markazul-ulama-dars';
+        let db = null;
+        let currentUser = null;
+
+        function setBadge(label) {
+            if (typeof window.updateSyncBadge === 'function') {
+                window.updateSyncBadge(label);
+            }
+        }
+
+        async function initFirebase() {
+            try {
+                const app = initializeApp(MY_FIREBASE_CONFIG);
+                db = getFirestore(app);
+                const auth = getAuth(app);
+
+                // Attempt anonymous sign-in (works seamlessly with both Test Mode and Auth Rules)
+                try {
+                    const cred = await signInAnonymously(auth);
+                    currentUser = cred.user;
+                } catch (authErr) {
+                    console.warn('Anonymous Auth not enabled yet; using Firestore rules directly.', authErr.code);
+                }
+
+                setBadge('Cloud Synced');
+
+                // Listen to site config
+                const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'siteConfig', 'main');
+                onSnapshot(
+                    configRef,
+                    (snapshot) => {
+                        if (snapshot.exists()) {
+                            const data = snapshot.data();
+                            if (data && data.payload && typeof window.applyCloudSiteData === 'function') {
+                                window.applyCloudSiteData(JSON.parse(data.payload));
+                            }
+                        }
+                    },
+                    (err) => {
+                        console.error('Admin config sync error:', err);
+                        setBadge('Sync Error');
+                    }
+                );
+
+                // Listen to live inquiries submitted on index.html
+                const inquiriesCol = collection(db, 'artifacts', appId, 'public', 'data', 'inquiries');
+                onSnapshot(
+                    inquiriesCol,
+                    (snapshot) => {
+                        const list = [];
+                        snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() }));
+                        list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                        if (typeof window.applyCloudInquiries === 'function') {
+                            window.applyCloudInquiries(list);
+                        }
+                    },
+                    (err) => console.error('Inquiries sync error:', err)
+                );
+            } catch (err) {
+                console.error('Firebase init error:', err);
+                setBadge('Local Only');
+            }
+        }
+
+        window.cloudBridge = {
+            isReady: () => Boolean(db),
+            saveSiteData: async (dataObj) => {
+                if (!db) return;
+                try {
+                    const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'siteConfig', 'main');
+                    await setDoc(configRef, {
+                        payload: JSON.stringify(dataObj),
+                        updatedAt: Date.now()
+                    });
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Published live to the Public Website!');
+                    }
+                } catch (err) {
+                    console.error('Save error:', err);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Cloud save failed. Check Firestore rules or image sizes.');
+                    }
+                }
+            },
+            deleteInquiry: async (docId) => {
+                if (!db || !docId) return;
+                try {
+                    const inqRef = doc(db, 'artifacts', appId, 'public', 'data', 'inquiries', docId);
+                    await deleteDoc(inqRef);
+                } catch (err) {
+                    console.error('Delete inquiry error:', err);
+                }
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => initFirebase().catch(console.error));
+        } else {
+            initFirebase().catch(console.error);
+        }
+    </script>
+</body>
+</html>
